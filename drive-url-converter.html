@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Drive URL Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        textarea { width: 100%; height: 200px; margin: 10px 0; }
+        button { padding: 10px 20px; background: #4285f4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #3367d6; }
+        .result { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>Google Drive URL Converter</h2>
+    <p><strong>Steps:</strong></p>
+    <ol>
+        <li>Upload all images to a Google Drive folder</li>
+        <li>Make folder public: Right-click → Share → "Anyone with link can view"</li>
+        <li>Select all images → Right-click → "Get link"</li>
+        <li>Paste all the sharing links below</li>
+    </ol>
+
+    <h3>Paste Google Drive sharing links here:</h3>
+    <textarea id="input" placeholder="Paste your Google Drive sharing links here, one per line..."></textarea>
+    
+    <button onclick="convertUrls()">Convert to Direct Image URLs</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function convertUrls() {
+            const input = document.getElementById('input').value;
+            const lines = input.split('\n').filter(line => line.trim());
+            
+            if (lines.length === 0) {
+                alert('Please paste some Google Drive links');
+                return;
+            }
+
+            let directUrls = [];
+            let jsArray = 'const mediaFiles = [\n';
+            
+            lines.forEach((line, index) => {
+                const match = line.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                if (match) {
+                    const fileId = match[1];
+                    const directUrl = `https://drive.google.com/uc?id=${fileId}`;
+                    directUrls.push(directUrl);
+                    
+                    // Assume images for now, you can modify this
+                    jsArray += `  {\n`;
+                    jsArray += `    id: ${index + 1},\n`;
+                    jsArray += `    type: 'image',\n`;
+                    jsArray += `    src: '${directUrl}',\n`;
+                    jsArray += `    title: 'Image ${index + 1}',\n`;
+                    jsArray += `    category: 'images'\n`;
+                    jsArray += `  }${index < lines.length - 1 ? ',' : ''}\n`;
+                }
+            });
+            
+            jsArray += '];';
+
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <div class="result">
+                    <h3>Found ${directUrls.length} images</h3>
+                    <h4>Direct URLs:</h4>
+                    <textarea readonly>${directUrls.join('\n')}</textarea>
+                    
+                    <h4>JavaScript Array (copy this to replace the generateItems() function in script.js):</h4>
+                    <textarea readonly>generateItems() {
+        this.items = ${jsArray.replace('const mediaFiles = ', '').replace(';', '')};
+        
+        // Add 2 placeholder reels
+        for (let i = 1; i <= 2; i++) {
+            this.items.push({
+                id: ${directUrls.length} + i,
+                type: 'video',
+                src: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                title: \`Reel \${i}\`,
+                category: 'reels'
+            });
+        }
+    }</textarea>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

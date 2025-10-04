@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Drive Image Extractor</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <h2>Extract Images from Google Drive Folder</h2>
+    <button id="authorize-button" style="display: none;">Authorize</button>
+    <button id="signout-button" style="display: none;">Sign Out</button>
+    
+    <div id="content" style="display: none;">
+        <p>Folder ID: <input type="text" id="folder-id" placeholder="Enter Google Drive folder ID" style="width: 400px;"></p>
+        <button onclick="listImages()">Get Image URLs</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const CLIENT_ID = 'YOUR_CLIENT_ID'; // You'll need to get this
+        const API_KEY = 'YOUR_API_KEY';     // You'll need to get this
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        document.getElementById('authorize-button').style.visibility = 'hidden';
+        document.getElementById('signout-button').style.visibility = 'hidden';
+
+        async function initializeGapi() {
+            await gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '',
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                document.getElementById('authorize-button').style.visibility = 'visible';
+            }
+        }
+
+        function handleAuthClick() {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                document.getElementById('signout-button').style.visibility = 'visible';
+                document.getElementById('authorize-button').innerText = 'Refresh';
+                document.getElementById('content').style.display = 'block';
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                tokenClient.requestAccessToken({prompt: ''});
+            }
+        }
+
+        function handleSignoutClick() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+                document.getElementById('content').style.display = 'none';
+                document.getElementById('authorize-button').innerText = 'Authorize';
+                document.getElementById('signout-button').style.visibility = 'hidden';
+            }
+        }
+
+        async function listImages() {
+            const folderId = document.getElementById('folder-id').value;
+            if (!folderId) {
+                alert('Please enter a folder ID');
+                return;
+            }
+
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: `'${folderId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/')`,
+                    fields: 'files(id, name, mimeType)',
+                });
+
+                const files = response.result.files;
+                if (files.length === 0) {
+                    document.getElementById('results').innerHTML = 'No images found.';
+                    return;
+                }
+
+                let html = '<h3>Found ' + files.length + ' files:</h3>';
+                let jsArray = 'const mediaFiles = [\n';
+
+                files.forEach((file, index) => {
+                    const directUrl = `https://drive.google.com/uc?id=${file.id}`;
+                    const isVideo = file.mimeType.includes('video/');
+                    
+                    html += `<p><strong>${file.name}</strong><br>`;
+                    html += `<a href="${directUrl}" target="_blank">${directUrl}</a></p>`;
+                    
+                    jsArray += `  {\n`;
+                    jsArray += `    id: ${index + 1},\n`;
+                    jsArray += `    type: '${isVideo ? 'video' : 'image'}',\n`;
+                    jsArray += `    src: '${directUrl}',\n`;
+                    jsArray += `    title: '${file.name}',\n`;
+                    jsArray += `    category: '${isVideo ? 'reels' : 'images'}'\n`;
+                    jsArray += `  }${index < files.length - 1 ? ',' : ''}\n`;
+                });
+
+                jsArray += '];';
+
+                html += '<h3>JavaScript Array (copy this to your script.js):</h3>';
+                html += `<textarea style="width: 100%; height: 200px;">${jsArray}</textarea>`;
+
+                document.getElementById('results').innerHTML = html;
+
+            } catch (err) {
+                document.getElementById('results').innerHTML = 'Error: ' + err.message;
+            }
+        }
+
+        document.getElementById('authorize-button').addEventListener('click', handleAuthClick);
+        document.getElementById('signout-button').addEventListener('click', handleSignoutClick);
+
+        initializeGapi();
+    </script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="initializeGapi()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+</body>
+</html>
