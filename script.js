@@ -1090,6 +1090,8 @@ class Gallery {
         this.currentPage = page;
         this.renderGallery();
         this.bindGalleryItems();
+        // Scroll to top when changing pages
+        window.scrollTo(0, 0);
     }
 
     bindEvents() {
