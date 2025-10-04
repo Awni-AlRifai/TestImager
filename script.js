@@ -1090,8 +1090,11 @@ class Gallery {
         this.currentPage = page;
         this.renderGallery();
         this.bindGalleryItems();
-        // Scroll to top when changing pages
-        window.scrollTo(0, 0);
+        // Scroll to beginning of gallery grid with offset
+        const main = document.querySelector('main');
+        if (main) {
+            main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     bindEvents() {
