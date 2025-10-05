@@ -230,9 +230,9 @@ body.filter-reels .hero-section {
 
 /* Clean reel container styles */
 .reel-container {
-    width: 100%;
-    max-width: 1000px;
-    margin: 2rem auto;
+    width: 96vw;
+    max-width: none;
+    margin: 0 auto;
     padding: 2rem;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
@@ -291,59 +291,37 @@ body.filter-reels .hero-section {
     transform: translateY(-2px);
 }
 
-/* Mobile fullscreen overlay styles */
-.mobile-fullscreen-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mobile-fullscreen-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mobile-fullscreen-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    color: white;
-    font-size: 2rem;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-}
-
-.mobile-fullscreen-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: white;
-    transform: scale(1.1);
-}
-
-.mobile-fullscreen-container iframe {
-    width: 100vw !important;
-    height: 100vh !important;
-    border: none !important;
+/* Mobile reel video sizing - 80% width, 90% height */
+@media (max-width: 768px) {
+    .reel-container {
+        height: 90vh;
+        max-width: none;
+        margin: 1rem auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
+    .reel-header {
+        margin-bottom: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .reel-container > div[style*="position:relative"] {
+        width: 100% !important;
+        height: 0 !important;
+        padding-bottom: 56.25% !important;
+        max-width: none !important;
+        flex-grow: 1;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .reel-container iframe {
+        width: 100% !important;
+        height: 100% !important;
+    }
 }
 
 /* Adjust gallery layout for reels to show background */
