@@ -352,16 +352,12 @@ class Gallery {
                     return;
                 }
                 
-                const index = parseInt(e.currentTarget.dataset.index);
                 const category = e.currentTarget.dataset.category;
                 
-                // For reels, don't open modal - let users interact with iframe directly
-                if (category === 'reels') {
+                // Disable modal for both reels and images - no click effects
+                if (category === 'reels' || category === 'images') {
                     e.stopPropagation();
                     return;
-                } else {
-                    // For images, open modal as before
-                    this.openModal(index);
                 }
             });
         });
