@@ -1155,6 +1155,76 @@ class Gallery {
     selectReel(reelNumber) {
         this.currentPage = reelNumber;
         this.renderGallery();
+        
+        // On mobile devices, attempt to make video fullscreen after a short delay
+        if (this.isMobileDevice()) {
+            setTimeout(() => {
+                this.attemptMobileFullscreen();
+            }, 500);
+        }
+    }
+
+    isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+    }
+
+    attemptMobileFullscreen() {
+        const activeIframe = document.querySelector('.reel-container iframe');
+        if (activeIframe) {
+            // Try to request fullscreen on the iframe
+            if (activeIframe.requestFullscreen) {
+                activeIframe.requestFullscreen().catch(err => {
+                    console.log('Fullscreen request failed:', err);
+                    this.fallbackMobileFullscreen();
+                });
+            } else if (activeIframe.webkitRequestFullscreen) {
+                activeIframe.webkitRequestFullscreen();
+            } else if (activeIframe.mozRequestFullScreen) {
+                activeIframe.mozRequestFullScreen();
+            } else if (activeIframe.msRequestFullscreen) {
+                activeIframe.msRequestFullscreen();
+            } else {
+                this.fallbackMobileFullscreen();
+            }
+        }
+    }
+
+    fallbackMobileFullscreen() {
+        // Fallback: Create a fullscreen overlay with the video
+        const activeIframe = document.querySelector('.reel-container iframe');
+        if (activeIframe) {
+            const fullscreenOverlay = document.createElement('div');
+            fullscreenOverlay.className = 'mobile-fullscreen-overlay';
+            fullscreenOverlay.innerHTML = `
+                <div class="mobile-fullscreen-container">
+                    <button class="mobile-fullscreen-close">&times;</button>
+                    <iframe src="${activeIframe.src}" 
+                            allow="fullscreen;autoplay" 
+                            allowfullscreen 
+                            style="width:100vw; height:100vh; border:none;">
+                    </iframe>
+                </div>
+            `;
+            
+            document.body.appendChild(fullscreenOverlay);
+            document.body.style.overflow = 'hidden';
+            
+            // Close button functionality
+            const closeBtn = fullscreenOverlay.querySelector('.mobile-fullscreen-close');
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(fullscreenOverlay);
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close on overlay click
+            fullscreenOverlay.addEventListener('click', (e) => {
+                if (e.target === fullscreenOverlay) {
+                    document.body.removeChild(fullscreenOverlay);
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
     }
 
     bindEvents() {
