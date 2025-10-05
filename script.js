@@ -1014,27 +1014,50 @@ class Gallery {
     }
 
     generateItems() {
-        // Generate 100 placeholder images
-        for (let i = 1; i <= 100; i++) {
-            this.items.push({
-                id: i,
-                type: 'image',
-                src: `https://picsum.photos/300/200?random=${i}`,
-                title: `Image ${i}`,
-                category: 'images'
-            });
-        }
+        // Define reel videos with src and button title
+        const reelVideos = [
+           {
+              src: 'https://streamable.com/e/qgk4gl?loop=0',
+              buttonTitle: 'Jaha'
+            },
+            {
+              src: 'https://streamable.com/e/mjxr2r?loop=0',
+              buttonTitle: 'Talbe'
+            },
+            {
+                src: 'https://streamable.com/e/jmi741?loop=0&controls=1',
+                buttonTitle: 'Trend 1'
+            },
+            {
+                src: 'https://streamable.com/e/0439k2?controls=1',
+                buttonTitle: 'Trend 2'
+            }
+            // Add more videos here as needed:
+            // {
+            //     src: 'https://streamable.com/e/VIDEOID?controls=1',
+            //     buttonTitle: 'Trend 3'
+            // }
+        ];
 
-        // Generate 2 placeholder reels
-        for (let i = 1; i <= 2; i++) {
+        // Generate items using template
+        reelVideos.forEach((video, index) => {
             this.items.push({
-                id: 100 + i,
+                id: 1001 + index,
                 type: 'video',
-                src: `https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4`,
-                title: `Reel ${i}`,
+                iframe: this.createIframeTemplate(video.src),
+                title: video.buttonTitle,
+                buttonTitle: video.buttonTitle,
                 category: 'reels'
             });
-        }
+        });
+    }
+
+    createIframeTemplate(src) {
+        return `<div style="position:relative; width:100%; height:0; padding-bottom:56.25%; max-width:800px; margin:0 auto;">
+            <iframe allow="fullscreen;autoplay" allowfullscreen height="100%" src="${src}" width="100%" 
+                    style="border:none; width:100%; height:100%; position:absolute; left:0px; top:0px; overflow:hidden;">
+            </iframe>
+        </div>`;
     }
 
     convertToEmbedUrl(url) {
@@ -1042,41 +1065,73 @@ class Gallery {
         return fileIdMatch ? `https://drive.google.com/file/d/${fileIdMatch[1]}/preview` : url;
     }
 
+    convertToVideoUrl(url) {
+        // Convert Google Drive share URL to direct video URL
+        const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        return fileIdMatch ? `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}` : url;
+    }
+
     renderGallery() {
-        this.items = this.mediaFiles
+        // Combine mediaFiles with generated items (reels) - don't overwrite this.items
+        const allItems = [...this.mediaFiles, ...this.items.filter(item => item.category === 'reels')];
         const gallery = document.getElementById('gallery');
         const filteredItems = this.currentFilter === 'all' 
-            ? this.items 
-            : this.items.filter(item => item.category === this.currentFilter);
+            ? allItems 
+            : allItems.filter(item => item.category === this.currentFilter);
 
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        const pageItems = filteredItems.slice(startIndex, endIndex);
+        // Special handling for reels - render them completely differently
+        if (this.currentFilter === 'reels') {
+            const currentItemsPerPage = 1;
+            const startIndex = (this.currentPage - 1) * currentItemsPerPage;
+            const endIndex = startIndex + currentItemsPerPage;
+            const pageItems = filteredItems.slice(startIndex, endIndex);
 
-        gallery.innerHTML = pageItems.map((item, index) => `
-            <div class="gallery-item loading" data-index="${this.items.indexOf(item)}" data-category="${item.category}">
-                <div class="loading-spinner"></div>
-                ${item.type === 'image' 
-                    ? `<iframe src="${this.convertToEmbedUrl(item.src)}" frameborder="0" allowfullscreen></iframe>`
-                    : `<video src="${item.src}" muted>
-                         <source src="${item.src}" type="video/mp4">
-                       </video>`
-                }
-                ${item.category === 'reels' ? '<div class="reel-indicator">REEL</div>' : ''}
-                <div class="item-overlay">
-                    <div class="item-type">${item.category.toUpperCase()}</div>
-                    <div class="item-title">${item.title}</div>
+            // Create trend buttons using buttonTitle from data
+            const trendButtons = filteredItems.map((item, index) => `
+                <button class="trend-btn ${this.currentPage === index + 1 ? 'active' : ''}" 
+                        onclick="gallery.selectReel(${index + 1})">
+                    ${item.buttonTitle}
+                </button>
+            `).join('');
+
+            gallery.innerHTML = pageItems.map((item) => `
+                <div class="reel-container">
+                    <div class="reel-header">
+                        <div class="trend-buttons">
+                            ${trendButtons}
+                        </div>
+                    </div>
+                    ${item.iframe}
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+        } else {
+            // Regular gallery rendering for images
+            const currentItemsPerPage = this.itemsPerPage;
+            const startIndex = (this.currentPage - 1) * currentItemsPerPage;
+            const endIndex = startIndex + currentItemsPerPage;
+            const pageItems = filteredItems.slice(startIndex, endIndex);
 
-        this.setupLoadingHandlers();
+            gallery.innerHTML = pageItems.map((item, index) => `
+                <div class="gallery-item loading" data-index="${allItems.indexOf(item)}" data-category="${item.category}">
+                    <div class="loading-spinner"></div>
+                    <iframe src="${this.convertToEmbedUrl(item.src)}" frameborder="0" allowfullscreen></iframe>
+                    <div class="item-overlay">
+                        <div class="item-type">${item.category.toUpperCase()}</div>
+                        <div class="item-title">${item.title}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            this.setupLoadingHandlers();
+        }
 
         this.renderPagination(filteredItems.length);
     }
 
     renderPagination(totalItems) {
-        const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+        // Use different items per page for reels (1 per page) vs images (5 per page)
+        const currentItemsPerPage = this.currentFilter === 'reels' ? 1 : this.itemsPerPage;
+        const totalPages = Math.ceil(totalItems / currentItemsPerPage);
         const pagination = document.getElementById('pagination');
         
         pagination.innerHTML = `
@@ -1097,6 +1152,11 @@ class Gallery {
         }
     }
 
+    selectReel(reelNumber) {
+        this.currentPage = reelNumber;
+        this.renderGallery();
+    }
+
     bindEvents() {
         // Filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1105,6 +1165,14 @@ class Gallery {
                 e.target.classList.add('active');
                 this.currentFilter = e.target.dataset.filter;
                 this.currentPage = 1;
+                
+                // Add/remove body class for reels filter to hide hero section
+                if (this.currentFilter === 'reels') {
+                    document.body.classList.add('filter-reels');
+                } else {
+                    document.body.classList.remove('filter-reels');
+                }
+                
                 this.renderGallery();
                 this.bindGalleryItems();
             });
@@ -1127,8 +1195,20 @@ class Gallery {
                 galleryItem.classList.remove('loading');
                 galleryItem.classList.add('loaded');
                 // Optionally show an error state
-                console.warn('Failed to load image:', iframe.src);
+                console.warn('Failed to load iframe:', iframe.src);
             });
+        });
+
+        // Handle loading for Streamable iframes in reel containers
+        document.querySelectorAll('.gallery-item[data-category="reels"] iframe').forEach(iframe => {
+            // Set a timeout to mark as loaded since Streamable iframes may not fire load events reliably
+            setTimeout(() => {
+                const galleryItem = iframe.closest('.gallery-item');
+                if (galleryItem) {
+                    galleryItem.classList.remove('loading');
+                    galleryItem.classList.add('loaded');
+                }
+            }, 1000);
         });
 
         document.querySelectorAll('.gallery-item video').forEach(video => {
@@ -1143,8 +1223,29 @@ class Gallery {
     bindGalleryItems() {
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                // Prevent modal opening if clicking directly on video controls or iframe
+                if (e.target.tagName === 'VIDEO' || e.target.tagName === 'IFRAME') {
+                    e.stopPropagation();
+                    return;
+                }
+                
+                // Check if clicking inside an iframe container (for mobile video controls)
+                if (e.target.closest('iframe') || e.target.closest('div[style*="position:relative"]')) {
+                    e.stopPropagation();
+                    return;
+                }
+                
                 const index = parseInt(e.currentTarget.dataset.index);
-                this.openModal(index);
+                const category = e.currentTarget.dataset.category;
+                
+                // For reels, don't open modal - let users interact with iframe directly
+                if (category === 'reels') {
+                    e.stopPropagation();
+                    return;
+                } else {
+                    // For images, open modal as before
+                    this.openModal(index);
+                }
             });
         });
     }
@@ -1174,7 +1275,9 @@ class Gallery {
 
     openModal(index) {
         this.currentIndex = index;
-        const item = this.items[index];
+        // Get the correct item from combined array
+        const allItems = [...this.mediaFiles, ...this.items.filter(item => item.category === 'reels')];
+        const item = allItems[index];
         const modal = document.getElementById('modal');
         const modalImg = document.getElementById('modal-img');
         const modalVideo = document.getElementById('modal-video');
@@ -1183,6 +1286,14 @@ class Gallery {
             modalImg.src = this.convertToEmbedUrl(item.src);
             modalImg.style.display = 'block';
             modalVideo.style.display = 'none';
+        } else if (item.type === 'video' && item.category === 'reels') {
+            // For reel videos, use the video element with autoplay and sound
+            modalVideo.src = item.src;
+            modalVideo.style.display = 'block';
+            modalImg.style.display = 'none';
+            modalVideo.autoplay = true;
+            modalVideo.controls = true;
+            modalVideo.loop = true;
         } else {
             modalVideo.src = item.src;
             modalVideo.style.display = 'block';
@@ -1204,9 +1315,10 @@ class Gallery {
     }
 
     navigateModal(direction) {
+        const allItems = [...this.mediaFiles, ...this.items.filter(item => item.category === 'reels')];
         this.currentIndex += direction;
-        if (this.currentIndex < 0) this.currentIndex = this.items.length - 1;
-        if (this.currentIndex >= this.items.length) this.currentIndex = 0;
+        if (this.currentIndex < 0) this.currentIndex = allItems.length - 1;
+        if (this.currentIndex >= allItems.length) this.currentIndex = 0;
         this.openModal(this.currentIndex);
     }
 }

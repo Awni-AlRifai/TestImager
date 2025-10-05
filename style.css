@@ -113,6 +113,45 @@ nav {
     pointer-events: none;
 }
 
+/* Enable video controls for reels on all devices */
+.gallery-item[data-category="reels"] iframe {
+    pointer-events: auto !important;
+}
+
+.video-thumbnail iframe,
+.video-thumbnail div[style*="position:relative"] iframe {
+    pointer-events: auto !important;
+}
+
+/* Additional mobile-specific controls */
+@media (max-width: 768px) {
+    .gallery-item[data-category="reels"] iframe {
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+    }
+    
+    .video-thumbnail iframe,
+    .video-thumbnail div[style*="position:relative"] iframe {
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+    }
+}
+
+/* Iframe embed styling for reels */
+.video-thumbnail iframe,
+.video-thumbnail div[style*="position:relative"] {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    border: none !important;
+}
+
+.video-thumbnail div[style*="position:relative"] iframe {
+    pointer-events: auto !important;
+}
+
 /* Loading Spinner Styles */
 .loading-spinner {
     position: absolute;
@@ -182,6 +221,162 @@ nav {
     border-radius: 10px;
     font-size: 0.7rem;
     font-weight: bold;
+}
+
+/* Hide hero section when reels filter is active */
+body.filter-reels .hero-section {
+    display: none;
+}
+
+/* Clean reel container styles */
+.reel-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Reel header styles */
+.reel-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    width: 100%;
+}
+
+/* Trend buttons container */
+.trend-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Individual trend button styles */
+.trend-btn {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.trend-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.trend-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #667eea;
+    border-color: white;
+    text-shadow: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.trend-btn.active:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+/* Adjust gallery layout for reels to show background */
+body.filter-reels .gallery {
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    padding: 2rem !important;
+    margin: 0 auto !important;
+    max-width: 1200px !important;
+    width: 100% !important;
+    min-height: calc(100vh - 200px) !important;
+}
+
+/* Remove all gallery item styles for reels */
+body.filter-reels .gallery-item {
+    display: none !important;
+}
+
+/* Keep header visible for reels */
+body.filter-reels header {
+    display: block !important;
+}
+
+/* Style pagination for reels to blend with background */
+body.filter-reels .pagination {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 15px !important;
+    padding: 1rem 2rem !important;
+    margin: 2rem auto !important;
+    max-width: 400px !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Video Thumbnail Styles */
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 15px;
+}
+
+/* Remove cursor pointer for video thumbnails that have been replaced with iframes */
+.video-thumbnail:has(iframe) {
+    cursor: default;
+}
+
+.video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.video-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.8;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.video-thumbnail:hover .play-button {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.play-button svg {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+/* Remove loading spinner for video thumbnails */
+.gallery-item[data-category="reels"] .loading-spinner {
+    display: none;
+}
+
+.gallery-item[data-category="reels"] {
+    background: transparent;
 }
 
 /* Modal Styles */
@@ -292,5 +487,91 @@ nav {
     
     .modal-nav {
         padding: 0 1rem;
+    }
+    
+    /* Mobile responsive adjustments for reels */
+    body.filter-reels .gallery-item {
+        width: 95vw;
+        height: 70vh;
+        max-width: none;
+        max-height: none;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .gallery-item[data-category="reels"] .video-thumbnail {
+        width: 95vw !important;
+        height: 70vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Adjust reel container for mobile */
+    .gallery-item[data-category="reels"] .video-thumbnail div[style*="position:relative"] {
+        width: 95vw !important;
+        height: 70vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 auto !important;
+    }
+    
+/* Ensure mobile gallery is centered */
+body.filter-reels .gallery {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100vw !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Prevent horizontal overflow on mobile */
+body.filter-reels {
+    overflow-x: hidden !important;
+    width: 100vw !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure body and html don't overflow */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+}
+}
+
+/* Additional responsive breakpoint for very small screens */
+@media (max-width: 480px) {
+    body.filter-reels .gallery-item {
+        width: 98vw;
+        height: 60vh;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .gallery-item[data-category="reels"] .video-thumbnail {
+        width: 98vw !important;
+        height: 60vh !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .gallery-item[data-category="reels"] .video-thumbnail div[style*="position:relative"] {
+        width: 98vw !important;
+        height: 60vh !important;
+        margin: 0 auto !important;
     }
 }
